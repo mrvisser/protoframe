@@ -74,12 +74,13 @@ function isPayloadBodyOfType<
 
 function isPayloadResponseOfType<
   P extends Protoframe,
-  T extends ProtoframeMessageType<P>
+  T extends ProtoframeMessageType<P>,
+  R extends ProtoframePayloadResponse<P, T>
 >(
   protocol: ProtoframeDescriptor<P>,
   type: T,
   payload: { type?: string; response?: unknown } | undefined,
-): payload is ProtoframePayloadResponse<P, T> {
+): payload is R {
   if (hasValue(payload)) {
     const payloadType = payload.type;
     if (hasValue(payloadType) && hasValue(payload.response)) {
@@ -93,14 +94,16 @@ function isPayloadResponseOfType<
   }
 }
 
+function destroyAll(listeners: [Window, (ev: MessageEvent) => void][]): void {
+  listeners.forEach(([w, l]) => w.removeEventListener('message', l));
+  listeners.length = 0;
+}
+
 function awaitResponse<
   P extends Protoframe,
-  T extends ProtoframeMessageType<P>
->(
-  thisWindow: Window,
-  protocol: ProtoframeDescriptor<P>,
-  type: T,
-): Promise<ProtoframeMessageResponse<P, T>> {
+  T extends ProtoframeMessageType<P>,
+  R extends ProtoframeMessageResponse<P, T>
+>(thisWindow: Window, protocol: ProtoframeDescriptor<P>, type: T): Promise<R> {
   return new Promise((accept) => {
     const handle: (ev: MessageEvent) => void = (ev) => {
       const payload = ev.data;
@@ -122,30 +125,30 @@ function handleTell0<
   protocol: ProtoframeDescriptor<P>,
   type: T,
   handler: (body: ProtoframeMessageBody<P, T>) => void,
-): void {
-  thisWindow.addEventListener('message', (ev) => {
+): [Window, (ev: MessageEvent) => void] {
+  const listener = (ev: MessageEvent): void => {
     const payload = ev.data;
     if (isPayloadBodyOfType(protocol, 'tell', type, payload)) {
       handler(payload.body);
     }
-  });
+  };
+  thisWindow.addEventListener('message', listener);
+  return [thisWindow, listener];
 }
 
 function handleAsk0<
   P extends Protoframe,
   T extends ProtoframeMessageType<P>,
-  _R extends ProtoframeMessageResponse<P, T> & {}
+  R extends ProtoframeMessageResponse<P, T> & {}
 >(
   thisWindow: Window,
   targetWindow: Window,
   protocol: ProtoframeDescriptor<P>,
   type: T,
   targetOrigin: string,
-  handler: (
-    body: ProtoframeMessageBody<P, T>,
-  ) => Promise<ProtoframeMessageResponse<P, T>>,
-): void {
-  thisWindow.addEventListener('message', async (ev) => {
+  handler: (body: ProtoframeMessageBody<P, T>) => Promise<R>,
+): [Window, (ev: MessageEvent) => void] {
+  const listener = async (ev: MessageEvent): Promise<void> => {
     const payload = ev.data;
     if (isPayloadBodyOfType(protocol, 'ask', type, payload)) {
       const response = await handler(payload.body);
@@ -154,7 +157,9 @@ function handleAsk0<
         targetOrigin,
       );
     }
-  });
+  };
+  thisWindow.addEventListener('message', listener);
+  return [thisWindow, listener];
 }
 
 function tell0<
@@ -167,11 +172,11 @@ function tell0<
   type: T,
   body: ProtoframeMessageBody<P, T>,
   targetOrigin: string,
-): void {
-  targetWindow.postMessage(
+): _R {
+  return targetWindow.postMessage(
     mkPayloadBody(protocol, 'tell', type, body),
     targetOrigin,
-  );
+  ) as _R;
 }
 
 async function ask0<
@@ -204,7 +209,11 @@ async function ask0<
   return run;
 }
 
-interface AbstractProtoframeSubscriber<P extends Protoframe> {
+interface Connector {
+  destroy(): void;
+}
+
+interface AbstractProtoframeSubscriber<P extends Protoframe> extends Connector {
   handleTell<
     T extends ProtoframeMessageType<P>,
     _R extends ProtoframeMessageResponse<P, T> & undefined
@@ -214,7 +223,7 @@ interface AbstractProtoframeSubscriber<P extends Protoframe> {
   ): void;
 }
 
-interface AbstractProtoframePublisher<P extends Protoframe> {
+interface AbstractProtoframePublisher<P extends Protoframe> extends Connector {
   tell<
     T extends ProtoframeMessageType<P>,
     _R extends ProtoframeMessageResponse<P, T> & undefined
@@ -253,11 +262,19 @@ export class ProtoframeSubscriber<P extends Protoframe>
     private readonly thisWindow: Window = window,
   ) {}
 
+  private listeners: [Window, (ev: MessageEvent) => void][] = [];
+
   public handleTell<
     T extends ProtoframeMessageType<P>,
     _R extends ProtoframeMessageResponse<P, T> & undefined
   >(type: T, handler: (body: ProtoframeMessageBody<P, T>) => void): void {
-    handleTell0(this.thisWindow, this.protocol, type, handler);
+    this.listeners.push(
+      handleTell0(this.thisWindow, this.protocol, type, handler),
+    );
+  }
+
+  destroy(): void {
+    destroyAll(this.listeners);
   }
 }
 
@@ -284,6 +301,8 @@ export class ProtoframePublisher<P extends Protoframe>
     return new ProtoframePublisher(protocol, targetWindow, targetOrigin);
   }
 
+  private listeners: [Window, (ev: MessageEvent) => void][] = [];
+
   constructor(
     private readonly protocol: ProtoframeDescriptor<P>,
     private readonly targetWindow: Window,
@@ -295,6 +314,10 @@ export class ProtoframePublisher<P extends Protoframe>
     body: P[T]['body'],
   ): void {
     tell0(this.targetWindow, this.protocol, type, body, this.targetOrigin);
+  }
+
+  destroy(): void {
+    destroyAll(this.listeners);
   }
 }
 
@@ -335,6 +358,8 @@ export class ProtoframePubsub<P extends Protoframe>
     );
   }
 
+  private listeners: [Window, (ev: MessageEvent) => void][] = [];
+
   constructor(
     private readonly protocol: ProtoframeDescriptor<P>,
     private readonly targetWindow: Window,
@@ -346,7 +371,9 @@ export class ProtoframePubsub<P extends Protoframe>
     T extends ProtoframeMessageType<P>,
     _R extends ProtoframeMessageResponse<P, T> & undefined
   >(type: T, handler: (body: ProtoframeMessageBody<P, T>) => void): void {
-    handleTell0(this.thisWindow, this.protocol, type, handler);
+    this.listeners.push(
+      handleTell0(this.thisWindow, this.protocol, type, handler),
+    );
   }
 
   public tell<T extends ProtoframeMessageType<P>, _R extends undefined>(
@@ -360,13 +387,15 @@ export class ProtoframePubsub<P extends Protoframe>
     T extends ProtoframeMessageType<P>,
     R extends P[T]['response'] & {}
   >(type: T, handler: (body: P[T]['body']) => Promise<R>): void {
-    handleAsk0(
-      this.thisWindow,
-      this.targetWindow,
-      this.protocol,
-      type,
-      this.targetOrigin,
-      handler,
+    this.listeners.push(
+      handleAsk0(
+        this.thisWindow,
+        this.targetWindow,
+        this.protocol,
+        type,
+        this.targetOrigin,
+        handler,
+      ),
     );
   }
 
@@ -384,5 +413,9 @@ export class ProtoframePubsub<P extends Protoframe>
       this.targetOrigin,
       timeout,
     );
+  }
+
+  destroy(): void {
+    destroyAll(this.listeners);
   }
 }

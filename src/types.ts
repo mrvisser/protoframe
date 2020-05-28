@@ -1,8 +1,9 @@
-export type Protoframe = Record<string, ProtoframeEntry<never, never>>;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type Protoframe = Record<string, ProtoframeEntry<any, any>>;
 
-export type ProtoframeEntry<B, R extends {} | undefined> = {
+export type ProtoframeEntry<B, R extends {}> = {
   body: B;
-  response: R;
+  response?: R;
 };
 
 export type ProtoframeMessageType<P extends Protoframe> = string & keyof P;
