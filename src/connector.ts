@@ -210,10 +210,18 @@ async function ask0<
 }
 
 interface Connector {
+  /** Destroy the connector and all resources/listeners being held. */
   destroy(): void;
 }
 
 interface AbstractProtoframeSubscriber<P extends Protoframe> extends Connector {
+  /**
+   * Handle a message that was sent with the [[ProtoframePublisher.tell]]
+   * function.
+   *
+   * @param type The message type being handled
+   * @param handler The handler function for the message
+   */
   handleTell<
     T extends ProtoframeMessageType<P>,
     _R extends ProtoframeMessageResponse<P, T> & undefined
@@ -224,6 +232,14 @@ interface AbstractProtoframeSubscriber<P extends Protoframe> extends Connector {
 }
 
 interface AbstractProtoframePublisher<P extends Protoframe> extends Connector {
+  /**
+   * Send a message to a receiving connector. This is a fire-and-forget emitter
+   * that does not accept a response. If you want a request-response workflow,
+   * use [[ProtoframePubsub.ask]].
+   *
+   * @param type The message type being sent
+   * @param body The body of the message to send
+   */
   tell<
     T extends ProtoframeMessageType<P>,
     _R extends ProtoframeMessageResponse<P, T> & undefined
@@ -236,6 +252,19 @@ interface AbstractProtoframePublisher<P extends Protoframe> extends Connector {
 interface AbstractProtoframePubsub<P extends Protoframe>
   extends AbstractProtoframeSubscriber<P>,
     AbstractProtoframePublisher<P> {
+  /**
+   * Send an "ask" message to the receiving connector. On the other end, a
+   * connector would have invoked `handleAsk` in order to receive this message
+   * and issue a response.
+   *
+   * The promise returned by this call will resolve when a response as been
+   * received from the target connector, or if the timeout has been exceeded
+   *
+   * @param type The message type being asked
+   * @param body The body of the ask message
+   * @param timeout How long to wait for a response before the resulting promise
+   *  is rejected with a timeout error.
+   */
   ask<
     T extends ProtoframeMessageType<P>,
     B extends ProtoframeMessageBody<P, T>,
@@ -246,6 +275,13 @@ interface AbstractProtoframePubsub<P extends Protoframe>
     timeout?: number,
   ): Promise<R>;
 
+  /**
+   * Handle an "ask" message and provide a response. This is invoked when the
+   * asking connector has invoked the `ask` method of the pubsub connector.
+   *
+   * @param type The message type being listened to
+   * @param handler The message handler that eventually returns a response
+   */
   handleAsk<
     T extends ProtoframeMessageType<P>,
     R extends ProtoframeMessageResponse<P, T> & {}
@@ -280,6 +316,14 @@ export class ProtoframeSubscriber<P extends Protoframe>
 
 export class ProtoframePublisher<P extends Protoframe>
   implements AbstractProtoframePublisher<P> {
+  /**
+   * We are a "parent" page that is embedding an iframe, and we wish to connect
+   * to that iframe in order to publish messages.
+   *
+   * @param protocol The protocol this connector will communicate with
+   * @param iframe The target iframe HTML element we are connecting to
+   * @param targetOrigin The target scheme and host we expect the receiver to be
+   */
   public static parent<P extends Protoframe>(
     protocol: ProtoframeDescriptor<P>,
     iframe: HTMLIFrameElement,
@@ -293,6 +337,15 @@ export class ProtoframePublisher<P extends Protoframe>
     }
   }
 
+  /**
+   * We are an "iframe" page that will be embedded, and we wish to connect to a
+   * parent page in order to publish messages.
+   *
+   * @param protocol The protocol this connector will communicate with
+   * @param targetOrigin The target scheme and host we expect the receiver to be
+   * @param targetWindow The window of the parent frame. This should normally be
+   *  the `window.parent`
+   */
   public static iframe<P extends Protoframe>(
     protocol: ProtoframeDescriptor<P>,
     targetOrigin?: string,
@@ -323,6 +376,16 @@ export class ProtoframePublisher<P extends Protoframe>
 
 export class ProtoframePubsub<P extends Protoframe>
   implements AbstractProtoframePubsub<P> {
+  /**
+   * We are a "parent" page that is embedding an iframe, and we wish to connect
+   * to that iframe for communication.
+   *
+   * @param protocol The protocol this connector will communicate with
+   * @param iframe The target iframe HTML element we are connecting to
+   * @param targetOrigin The target scheme and host we expect the receiver to be
+   * @param thisWindow The parent window (our window). This should normally be
+   *  the current `window`
+   */
   public static parent<P extends Protoframe>(
     protocol: ProtoframeDescriptor<P>,
     iframe: HTMLIFrameElement,
@@ -342,6 +405,17 @@ export class ProtoframePubsub<P extends Protoframe>
     }
   }
 
+  /**
+   * We are an "iframe" page that will be embedded, and we wish to connect to a
+   * parent page for communication.
+   *
+   * @param protocol The protocol this connector will communicate with
+   * @param targetOrigin The target scheme and host we expect the receiver to be
+   * @param thisWindow The window of the current iframe. This should normally be
+   *  the current `window`
+   * @param targetWindow The window of the parent frame. This should normally be
+   *  the `window.parent`
+   */
   public static iframe<P extends Protoframe>(
     protocol: ProtoframeDescriptor<P>,
     targetOrigin = '*',

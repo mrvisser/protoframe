@@ -1,11 +1,5 @@
 import * as karma from 'karma';
 
-// Don't crash the karma process if there is a compilation error while making
-// code changes
-process.on('uncaughtException', (error) => {
-  console.error('uncaughtException', error);
-});
-
 // Karma configuration
 // Generated on Wed May 27 2020 14:52:46 GMT-0400 (Eastern Daylight Time)
 
@@ -19,7 +13,7 @@ module.exports = (config: karma.Config): void => {
 
     // start these browsers
     // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
-    browsers: ['Chrome'],
+    browsers: ['Chrome', 'Firefox'],
 
     // enable / disable colors in the output (reporters and logs)
     colors: true,
@@ -54,7 +48,7 @@ module.exports = (config: karma.Config): void => {
     // test results reporter to use
     // possible values: 'dots', 'progress'
     // available reporters: https://npmjs.org/browse/keyword/karma-reporter
-    reporters: ['spec'],
+    reporters: ['spec', 'karma-typescript'],
 
     // Continuous Integration mode
     // if true, Karma captures browsers, runs the tests and exits
