@@ -1,5 +1,7 @@
 # Protoframe
 
+[![Build Status](https://travis-ci.org/mrvisser/protoframe.svg?branch=master)](https://travis-ci.org/mrvisser/protoframe)
+
 A small (dependency-free) library for 2-way iframe communication.
 
 ## Problem
