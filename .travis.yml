@@ -4,3 +4,6 @@ node_js:
 cache: yarn
 script:
   - yarn test
+addons:
+  chrome: stable
+  firefox: latest
