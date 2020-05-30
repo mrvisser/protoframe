@@ -3,14 +3,9 @@ node_js:
   - 12
 cache: yarn
 script:
-  - yarn test
+  - yarn test --browsers Firefox
 addons:
-  chrome: stable
   firefox: latest
 env:
   global:
     - MOZ_HEADLESS=1
-before_install:
-  - # start your web application and listen on `localhost`
-  - google-chrome-stable --headless --disable-gpu --remote-debugging-port=9222 http://localhost &
-  ⋮
