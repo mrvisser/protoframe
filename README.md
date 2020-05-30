@@ -52,14 +52,8 @@ The `ProtoframeDescriptor` defines 2 elements of your protocol:
 
 ### Connectors
 
-There are 3 types of connectors offered:
-
-- `ProtoframeSubscriber`: A connector that can only subscribe to `tell` messages
-  being sent from a publisher
-- `Protoframepublisher`: A connector that can only publish `tell` messages to a
-  subscribing iframe or parent
-
-For example, we have a page that wishes to use an iframe as a "cache" server:
+The connector allows 2-way communication between a page and its iframe. For
+example, we have a page that wishes to use an iframe as a "cache" server:
 
 **Iframe:**
 
