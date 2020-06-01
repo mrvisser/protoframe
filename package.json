@@ -11,7 +11,7 @@
     "build": "run-s lint test clean _build",
     "clean": "rm -rf ./dist",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
-    "release": "run-p release-it",
+    "release": "run-p 'npx release-it'",
     "start": "karma start",
     "test": "karma start --single-run"
   },

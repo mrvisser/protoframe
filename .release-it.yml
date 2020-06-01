@@ -1,3 +1,6 @@
+git:
+  requireBranch: master
+  requireCommits: true
 github:
   release: true
 hooks:
