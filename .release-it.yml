@@ -5,6 +5,3 @@ github:
   release: true
 hooks:
   before:init: yarn build
-npm:
-  publishConfig:
-    registry: https://registry.npmjs.org/
