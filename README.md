@@ -31,11 +31,11 @@ sending and receiving these messages across parent and iframe windows.
 import { ProtoframeDescriptor } from 'protoframe';
 
 const cacheProtocol: ProtoframeDescriptor<{
-  get: {
+  getFoo: {
     body: { key: string };
     response: { value: string };
   };
-  set: {
+  setBar: {
     body: { key: string; value: string };
   };
 }> = { type: 'cache' };
@@ -70,8 +70,8 @@ const data: { [key: string]: string } = {};
 const cache = ProtoframePubsub.iframe(cacheProtocol);
 
 // Implement our handlers for the ask and tell requests defined in the protocol
-cache.handleTell('set', ({ key, value }) => (data[key] = value));
-cache.handleAsk('get', async ({ key }) => {
+cache.handleTell('setBar', ({ key, value }) => (data[key] = value));
+cache.handleAsk('getFoo', async ({ key }) => {
   const value = key in data ? data[key] : null;
   return { value };
 });
@@ -85,8 +85,8 @@ import { ProtoframePubsub } from 'protoframe';
 const iframe = document.getElementById('myCacheServerIframe');
 const client = ProtoframePubsub.parent(cacheProtocol, iframe);
 
-client.tell('set', { key: 'my key', value: 'my value' });
+client.tell('setBar', { key: 'my key', value: 'my value' });
 
 // value = { value: 'my value' }
-const value = await client.ask('get', { key: 'my key' });
+const value = await client.ask('getFoo', { key: 'my key' });
 ```
