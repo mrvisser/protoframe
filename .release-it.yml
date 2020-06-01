@@ -1,2 +1,4 @@
 github:
   release: true
+hooks:
+  before:init: yarn build
