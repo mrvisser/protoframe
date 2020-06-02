@@ -10,6 +10,13 @@ import {
 } from './types';
 import { hasValue } from './util';
 
+type SystemProtocol = {
+  ping: {
+    body: {};
+    response: {};
+  };
+};
+
 function mkPayloadType<
   P extends Protoframe,
   T extends ProtoframeMessageType<P>
@@ -376,6 +383,26 @@ export class ProtoframePublisher<P extends Protoframe>
 
 export class ProtoframePubsub<P extends Protoframe>
   implements AbstractProtoframePubsub<P> {
+  public static async connect<P extends Protoframe>(
+    pubsub: ProtoframePubsub<P>,
+    tries = 25,
+    timeout = 500,
+  ): Promise<ProtoframePubsub<P>> {
+    for (let i = 0; i < tries; i++) {
+      try {
+        await pubsub.ping({ timeout });
+        return pubsub;
+      } catch (_) {
+        continue;
+      }
+    }
+    throw new Error(
+      `Could not connect on protocol ${pubsub.protocol.type} after ${
+        tries * timeout
+      }ms`,
+    );
+  }
+
   /**
    * We are a "parent" page that is embedding an iframe, and we wish to connect
    * to that iframe for communication.
@@ -432,6 +459,9 @@ export class ProtoframePubsub<P extends Protoframe>
     );
   }
 
+  private systemProtocol: ProtoframeDescriptor<SystemProtocol> = {
+    type: `system|${this.protocol.type}`,
+  };
   private listeners: [Window, (ev: MessageEvent) => void][] = [];
 
   constructor(
@@ -439,7 +469,29 @@ export class ProtoframePubsub<P extends Protoframe>
     private readonly targetWindow: Window,
     private readonly thisWindow: Window = window,
     private readonly targetOrigin: string = '*',
-  ) {}
+  ) {
+    // Answer to ping requests
+    handleAsk0(
+      thisWindow,
+      targetWindow,
+      this.systemProtocol,
+      'ping',
+      targetOrigin,
+      () => Promise.resolve({}),
+    );
+  }
+
+  public async ping({ timeout = 10000 }: { timeout?: number }): Promise<void> {
+    await ask0(
+      this.thisWindow,
+      this.targetWindow,
+      this.systemProtocol,
+      'ping',
+      {},
+      this.targetOrigin,
+      timeout,
+    );
+  }
 
   public handleTell<
     T extends ProtoframeMessageType<P>,

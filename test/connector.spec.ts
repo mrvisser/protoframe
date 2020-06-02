@@ -120,6 +120,46 @@ describe('ProtoframeSubscriber', () => {
 });
 
 describe('ProtoframePubsub', () => {
+  describe('connect', () => {
+    it('should fail if we cannot connect within the allocated time', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const iframe: any = {
+        contentWindow: {
+          // This iframe window we will post messages on is not linked to the
+          // one we are listening to. So any `ask` messages will be dropped
+          postMessage: (): void => undefined,
+        },
+      };
+      spyOn(iframe.contentWindow, 'postMessage');
+
+      const pubsub = ProtoframePubsub.parent(cacheProtocol, iframe);
+      try {
+        await expectAsync(
+          ProtoframePubsub.connect(pubsub, 5, 10),
+        ).toBeRejectedWithError(
+          'Could not connect on protocol cache after 50ms',
+        );
+
+        // Ensure it attempted to connect 5 times
+        expect(iframe.contentWindow.postMessage).toHaveBeenCalledTimes(5);
+      } finally {
+        pubsub.destroy();
+      }
+    });
+    it('should connect if there is a connector on both ends', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const iframe: any = {
+        contentWindow: window,
+      };
+      const pubsub = ProtoframePubsub.parent(cacheProtocol, iframe);
+      try {
+        const connectedPubsub = await ProtoframePubsub.connect(pubsub, 5, 10);
+        expect(pubsub).toBe(connectedPubsub);
+      } finally {
+        pubsub.destroy();
+      }
+    });
+  });
   describe('parent', () => {
     it('should fail if the child iframe has no contentWindow', () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
