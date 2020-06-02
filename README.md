@@ -85,8 +85,11 @@ import { ProtoframePubsub } from 'protoframe';
 const iframe = document.getElementById('myCacheServerIframe');
 const client = ProtoframePubsub.parent(cacheProtocol, iframe);
 
-client.tell('setBar', { key: 'my key', value: 'my value' });
+// Wait for the iframe page to load and for the connector to be instantiated
+ProtoframePubsub.connect(client).then(() => {
+  client.tell('setBar', { key: 'my key', value: 'my value' });
 
-// value = { value: 'my value' }
-const value = await client.ask('getFoo', { key: 'my key' });
+  // value = { value: 'my value' }
+  const value = await client.ask('getFoo', { key: 'my key' });
+});
 ```

@@ -383,9 +383,20 @@ export class ProtoframePublisher<P extends Protoframe>
 
 export class ProtoframePubsub<P extends Protoframe>
   implements AbstractProtoframePubsub<P> {
+  /**
+   * Connect to the target configured in the supplied pubsub connector by
+   * sending ping requests over and over until we get a response.
+   *
+   * @param pubsub The pubsub connector to wait until is "connected" to its
+   *  target
+   * @param tries How many times to try and ping the target. By default, this
+   *  will try 50 times (thus waiting 25 seconds total)
+   * @param timeout How long to wait for a response from the target before
+   *  retrying. By default the timeout is 500ms (thus waiting 25 seconds total)
+   */
   public static async connect<P extends Protoframe>(
     pubsub: ProtoframePubsub<P>,
-    tries = 25,
+    tries = 50,
     timeout = 500,
   ): Promise<ProtoframePubsub<P>> {
     for (let i = 0; i < tries; i++) {
@@ -470,7 +481,7 @@ export class ProtoframePubsub<P extends Protoframe>
     private readonly thisWindow: Window = window,
     private readonly targetOrigin: string = '*',
   ) {
-    // Answer to ping requests
+    // Answer internally to ping requests
     handleAsk0(
       thisWindow,
       targetWindow,
@@ -481,6 +492,16 @@ export class ProtoframePubsub<P extends Protoframe>
     );
   }
 
+  /**
+   * Send a 'ping' request to check if there is a listener open at the target
+   * window. If this times out, then it means no listener was available *at the
+   * time the ping request was sent*. Since requests are not buffered, then this
+   * should be retried if we're waiting for some target iframe to start up and
+   * load its assets. See `ProtoframePubsub.connect` as an implementation of
+   * this functionality.
+   *
+   * @param timeout How long to wait for the reply before resulting in an error
+   */
   public async ping({ timeout = 10000 }: { timeout?: number }): Promise<void> {
     await ask0(
       this.thisWindow,
