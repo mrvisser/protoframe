@@ -140,8 +140,9 @@ describe('ProtoframePubsub', () => {
           'Could not connect on protocol cache after 50ms',
         );
 
-        // Ensure it attempted to connect 5 times
-        expect(iframe.contentWindow.postMessage).toHaveBeenCalledTimes(5);
+        // Ensure it attempted to connect 6 times (once initially, then 5
+        // retries)
+        expect(iframe.contentWindow.postMessage).toHaveBeenCalledTimes(6);
       } finally {
         pubsub.destroy();
       }
