@@ -1,6 +1,9 @@
 {
   "name": "protoframe",
   "version": "0.0.12",
+  "author": "Branden Visser",
+  "license": "MIT",
+  "description": "A small (dependency-free) library for 2-way iframe communication.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
@@ -15,6 +18,20 @@
     "start": "karma start",
     "test": "karma start --single-run"
   },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/mrvisser/protoframe.git"
+  },
+  "keywords": [
+    "addEventListener",
+    "communication",
+    "iframe",
+    "message",
+    "messaging",
+    "postMessage",
+    "protocol",
+    "window"
+  ],
   "dependencies": {},
   "devDependencies": {
     "@types/jasmine": "^3.5.10",

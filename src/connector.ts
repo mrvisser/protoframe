@@ -389,17 +389,17 @@ export class ProtoframePubsub<P extends Protoframe>
    *
    * @param pubsub The pubsub connector to wait until is "connected" to its
    *  target
-   * @param tries How many times to try and ping the target. By default, this
-   *  will try 50 times (thus waiting 25 seconds total)
+   * @param retries How many times to retry and ping the target. By default,
+   *  this will retry 50 times (thus waiting 25 seconds total)
    * @param timeout How long to wait for a response from the target before
    *  retrying. By default the timeout is 500ms (thus waiting 25 seconds total)
    */
   public static async connect<P extends Protoframe>(
     pubsub: ProtoframePubsub<P>,
-    tries = 50,
+    retries = 50,
     timeout = 500,
   ): Promise<ProtoframePubsub<P>> {
-    for (let i = 0; i < tries; i++) {
+    for (let i = 0; i <= retries; i++) {
       try {
         await pubsub.ping({ timeout });
         return pubsub;
@@ -409,7 +409,7 @@ export class ProtoframePubsub<P extends Protoframe>
     }
     throw new Error(
       `Could not connect on protocol ${pubsub.protocol.type} after ${
-        tries * timeout
+        retries * timeout
       }ms`,
     );
   }
