@@ -19,7 +19,7 @@ following facilities:
 This library allows you to define a protocol for this type of communication
 supporting both fire-and-forget (`tell`) semantics, as well as request/response
 (`ask`) semantics. It provides connector constructors that will facilitate the
-sending and receiving these messages across parent and iframe windows.
+sending and receiving of these messages across parent and iframe windows.
 
 ## How?
 
