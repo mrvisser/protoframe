@@ -1,7 +1,7 @@
 /** The protocol type that holds your message types and their schema. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type Protoframe = Record<string, ProtoframeEntry<any, any>>;
-export type ProtoframeEntry<B, R extends {}> = {
+export type ProtoframeEntry<B, R extends Record<string, unknown>> = {
   body: B;
   response?: R;
 };

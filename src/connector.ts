@@ -12,8 +12,8 @@ import { hasValue } from './util';
 
 type SystemProtocol = {
   ping: {
-    body: {};
-    response: {};
+    body: Record<string, unknown>;
+    response: Record<string, unknown>;
   };
 };
 
@@ -146,7 +146,7 @@ function handleTell0<
 function handleAsk0<
   P extends Protoframe,
   T extends ProtoframeMessageType<P>,
-  R extends ProtoframeMessageResponse<P, T> & {}
+  R extends ProtoframeMessageResponse<P, T> & Record<string, unknown>
 >(
   thisWindow: Window,
   targetWindow: Window,
@@ -190,7 +190,7 @@ async function ask0<
   P extends Protoframe,
   T extends ProtoframeMessageType<P>,
   B extends ProtoframeMessageBody<P, T>,
-  R extends ProtoframeMessageResponse<P, T> & {}
+  R extends ProtoframeMessageResponse<P, T> & Record<string, unknown>
 >(
   thisWindow: Window,
   targetWindow: Window,
@@ -275,7 +275,7 @@ interface AbstractProtoframePubsub<P extends Protoframe>
   ask<
     T extends ProtoframeMessageType<P>,
     B extends ProtoframeMessageBody<P, T>,
-    R extends ProtoframeMessageResponse<P, T> & {}
+    R extends ProtoframeMessageResponse<P, T> & Record<string, unknown>
   >(
     type: T,
     body: B,
@@ -291,7 +291,7 @@ interface AbstractProtoframePubsub<P extends Protoframe>
    */
   handleAsk<
     T extends ProtoframeMessageType<P>,
-    R extends ProtoframeMessageResponse<P, T> & {}
+    R extends ProtoframeMessageResponse<P, T> & Record<string, unknown>
   >(
     type: T,
     handler: (body: ProtoframeMessageBody<P, T>) => Promise<R>,
@@ -532,7 +532,7 @@ export class ProtoframePubsub<P extends Protoframe>
 
   public handleAsk<
     T extends ProtoframeMessageType<P>,
-    R extends P[T]['response'] & {}
+    R extends P[T]['response'] & Record<string, unknown>
   >(type: T, handler: (body: P[T]['body']) => Promise<R>): void {
     this.listeners.push(
       handleAsk0(
@@ -549,7 +549,7 @@ export class ProtoframePubsub<P extends Protoframe>
   public ask<
     T extends ProtoframeMessageType<P>,
     B extends P[T]['body'],
-    R extends P[T]['response'] & {}
+    R extends P[T]['response'] & Record<string, unknown>
   >(type: T, body: B, timeout = 10000): Promise<R> {
     return ask0(
       this.thisWindow,

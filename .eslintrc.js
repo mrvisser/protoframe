@@ -15,6 +15,10 @@ module.exports = {
   },
   plugins: ['sort-keys-fix', 'import'],
   rules: {
+    '@typescript-eslint/no-unused-vars': [
+      'error',
+      { varsIgnorePattern: '^_.*' },
+    ],
     'import/newline-after-import': 'error',
     'import/order': [
       'error',

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
 
 // Karma configuration
 // Generated on Wed May 27 2020 14:52:46 GMT-0400 (Eastern Daylight Time)
@@ -24,29 +25,27 @@ module.exports = (config) => {
     // list of files / patterns to exclude
     exclude: [],
 
-    karmaTypescriptConfig: {
-      bundlerOptions: {
-        acornOptions: {
-          ecmaVersion: 11,
-        },
-        transforms: [
-          require('karma-typescript-es6-transform')()
-        ]
-      }
-    },
-
     // list of files / patterns to load in the browser
     files: [
       'node_modules/@babel/polyfill/dist/polyfill.js',
       'src/*.ts',
       'src/**/*.ts',
       'test/*.ts',
-      'test/**/*.ts'
+      'test/**/*.ts',
     ],
 
     // frameworks to use
     // available frameworks: https://npmjs.org/browse/keyword/karma-adapter
     frameworks: ['jasmine', 'karma-typescript'],
+
+    karmaTypescriptConfig: {
+      bundlerOptions: {
+        acornOptions: {
+          ecmaVersion: 11,
+        },
+        transforms: [require('karma-typescript-es6-transform')()],
+      },
+    },
 
     // level of logging
     // possible values: config.LOG_DISABLE || config.LOG_ERROR || config.LOG_WARN || config.LOG_INFO || config.LOG_DEBUG
