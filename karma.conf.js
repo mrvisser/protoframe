@@ -1,9 +1,8 @@
-import * as karma from 'karma';
 
 // Karma configuration
 // Generated on Wed May 27 2020 14:52:46 GMT-0400 (Eastern Daylight Time)
 
-module.exports = (config: karma.Config): void => {
+module.exports = (config) => {
   config.set({
     // enable / disable watching file and executing tests whenever any file changes
     autoWatch: true,
@@ -25,8 +24,25 @@ module.exports = (config: karma.Config): void => {
     // list of files / patterns to exclude
     exclude: [],
 
+    karmaTypescriptConfig: {
+      bundlerOptions: {
+        acornOptions: {
+          ecmaVersion: 11,
+        },
+        transforms: [
+          require('karma-typescript-es6-transform')()
+        ]
+      }
+    },
+
     // list of files / patterns to load in the browser
-    files: ['src/*.ts', 'src/**/*.ts', 'test/*.ts', 'test/**/*.ts'],
+    files: [
+      'node_modules/@babel/polyfill/dist/polyfill.js',
+      'src/*.ts',
+      'src/**/*.ts',
+      'test/*.ts',
+      'test/**/*.ts'
+    ],
 
     // frameworks to use
     // available frameworks: https://npmjs.org/browse/keyword/karma-adapter
