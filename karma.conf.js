@@ -27,7 +27,7 @@ module.exports = (config) => {
 
     // list of files / patterns to load in the browser
     files: [
-      'node_modules/@babel/polyfill/dist/polyfill.js',
+      'node_modules/regenerator-runtime/runtime.js',
       'src/*.ts',
       'src/**/*.ts',
       'test/*.ts',
