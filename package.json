@@ -1,6 +1,6 @@
 {
   "name": "protoframe",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "author": "Branden Visser",
   "license": "MIT",
   "description": "A small (dependency-free) library for 2-way iframe communication.",
