@@ -35,10 +35,12 @@ function mkPayloadBody<
   protocol: ProtoframeDescriptor<P>,
   action: ProtoframeAction,
   type: T,
+  id: string,
   body: ProtoframeMessageBody<P, T>,
 ): ProtoframePayloadBody<P, T> {
   return {
     body,
+    id,
     type: mkPayloadType(protocol, action, type),
   };
 }
@@ -49,9 +51,11 @@ function mkPayloadResponse<
 >(
   protocol: ProtoframeDescriptor<P>,
   type: T,
+  id: string,
   response: ProtoframeMessageResponse<P, T>,
 ): ProtoframePayloadResponse<P, T> {
   return {
+    id,
     response,
     type: mkPayloadType(protocol, 'ask', type),
   };
@@ -110,11 +114,19 @@ function awaitResponse<
   P extends Protoframe,
   T extends ProtoframeMessageType<P>,
   R extends ProtoframeMessageResponse<P, T>
->(thisWindow: Window, protocol: ProtoframeDescriptor<P>, type: T): Promise<R> {
+>(
+  thisWindow: Window,
+  protocol: ProtoframeDescriptor<P>,
+  type: T,
+  id: string,
+): Promise<R> {
   return new Promise((accept) => {
     const handle: (ev: MessageEvent) => void = (ev) => {
       const payload = ev.data;
-      if (isPayloadResponseOfType(protocol, type, payload)) {
+      if (
+        isPayloadResponseOfType(protocol, type, payload) &&
+        payload.id === id
+      ) {
         thisWindow.removeEventListener('message', handle);
         accept(payload.response);
       }
@@ -160,7 +172,7 @@ function handleAsk0<
     if (isPayloadBodyOfType(protocol, 'ask', type, payload)) {
       const response = await handler(payload.body);
       targetWindow.postMessage(
-        mkPayloadResponse(protocol, type, response),
+        mkPayloadResponse(protocol, type, payload.id, response),
         targetOrigin,
       );
     }
@@ -180,8 +192,9 @@ function tell0<
   body: ProtoframeMessageBody<P, T>,
   targetOrigin: string,
 ): _R {
+  const id = Math.random().toString();
   return targetWindow.postMessage(
-    mkPayloadBody(protocol, 'tell', type, body),
+    mkPayloadBody(protocol, 'tell', type, id, body),
     targetOrigin,
   ) as _R;
 }
@@ -200,17 +213,18 @@ async function ask0<
   targetOrigin: string,
   timeout: number,
 ): Promise<R> {
+  const id = Math.random().toString();
   const run = new Promise<R>(async (accept, reject) => {
     const timeoutHandler = setTimeout(
       () => reject(new Error(`Failed to get response within ${timeout}ms`)),
       timeout,
     );
-    const response = await awaitResponse(thisWindow, protocol, type);
+    const response = await awaitResponse(thisWindow, protocol, type, id);
     clearTimeout(timeoutHandler);
     accept(response);
   });
   targetWindow.postMessage(
-    mkPayloadBody(protocol, 'ask', type, body),
+    mkPayloadBody(protocol, 'ask', type, id, body),
     targetOrigin,
   );
   return run;

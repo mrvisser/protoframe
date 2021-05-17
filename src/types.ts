@@ -62,6 +62,7 @@ export interface ProtoframePayloadBody<
   T extends ProtoframeMessageType<P>
 > {
   type: string;
+  id: string;
   body: ProtoframeMessageBody<P, T>;
 }
 
@@ -71,6 +72,7 @@ export interface ProtoframePayloadResponse<
   T extends ProtoframeMessageType<P>
 > {
   type: string;
+  id: string;
   response: ProtoframeMessageResponse<P, T>;
 }
 

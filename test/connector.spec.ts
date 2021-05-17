@@ -28,17 +28,23 @@ function createCacheWithClient({
   return [cache, client, data];
 }
 
-async function testFullyFunctionalCache(
+async function testFullyFunctionalConcurrentCache(
   client: ProtoframePubsub<CacheProtocol>,
 ): Promise<void> {
   // There should be no value
   expect((await client.ask('get', { key: 'key0' })).value).toBeNull;
 
-  // Set a value
-  client.tell('set', { key: 'key0', value: 'value' });
+  // Set a couple values
+  client.tell('set', { key: 'key0', value: 'value0' });
+  client.tell('set', { key: 'key1', value: 'value1' });
 
-  // There should now be a value
-  expect((await client.ask('get', { key: 'key0' })).value).toBe('value');
+  // Get the two values concurrently
+  expect(
+    await Promise.all([
+      client.ask('get', { key: 'key0' }),
+      client.ask('get', { key: 'key1' }),
+    ]).then((rs) => rs.map((r) => r.value)),
+  ).toEqual(['value0', 'value1']);
 
   // Delete the value
   client.tell('delete', { key: 'key0' });
@@ -180,7 +186,7 @@ describe('ProtoframePubsub', () => {
       const client = ProtoframePubsub.parent(cacheProtocol, iframe);
       const [cache] = createCacheWithClient({ client });
       try {
-        await testFullyFunctionalCache(client);
+        await testFullyFunctionalConcurrentCache(client);
       } finally {
         client.destroy();
         cache.destroy();
@@ -195,7 +201,7 @@ describe('ProtoframePubsub', () => {
       });
       const [, client] = createCacheWithClient({ cache });
       try {
-        await testFullyFunctionalCache(client);
+        await testFullyFunctionalConcurrentCache(client);
       } finally {
         cache.destroy();
         client.destroy();
@@ -207,7 +213,7 @@ describe('ProtoframePubsub', () => {
     it('should allow two way communication across a window', async () => {
       const [cache, client] = createCacheWithClient();
       try {
-        await testFullyFunctionalCache(client);
+        await testFullyFunctionalConcurrentCache(client);
       } finally {
         cache.destroy();
         client.destroy();
