@@ -152,7 +152,7 @@ describe('ProtoframePubsub', () => {
       } finally {
         pubsub.destroy();
       }
-    });
+    }, 30000);
     it('should connect if there is a connector on both ends', async () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const iframe: any = {

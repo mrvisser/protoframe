@@ -20,7 +20,7 @@ module.exports = (config) => {
 
     // Concurrency level
     // how many browser should be started simultaneous
-    concurrency: Infinity,
+    concurrency: 1,
 
     // list of files / patterns to exclude
     exclude: [],
@@ -41,7 +41,7 @@ module.exports = (config) => {
     karmaTypescriptConfig: {
       bundlerOptions: {
         acornOptions: {
-          ecmaVersion: 11,
+          ecmaVersion: "latest",
         },
         transforms: [require('karma-typescript-es6-transform')()],
       },
