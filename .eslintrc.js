@@ -1,11 +1,7 @@
 module.exports = {
   extends: [
     'plugin:@typescript-eslint/recommended',
-    'prettier/@typescript-eslint',
-    'plugin:prettier/recommended',
-    'plugin:import/errors',
-    'plugin:import/warnings',
-    'plugin:import/typescript',
+    'prettier',
   ],
   ignorePatterns: ['dist/**', 'node_modules/**', 'yarn.lock'],
   parser: '@typescript-eslint/parser',
