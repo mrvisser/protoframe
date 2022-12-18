@@ -6,9 +6,6 @@
   "description": "A small (dependency-free) library for 2-way iframe communication.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "files": [
-    "dist/**"
-  ],
   "scripts": {
     "_build": "tsc --build tsconfig.build.json",
     "build": "run-s lint test clean _build",
